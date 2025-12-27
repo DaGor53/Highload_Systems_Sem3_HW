@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: my_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/data    
+    networks:
+      - app-network
+
+  transform:
+      build:
+        context: .
+        dockerfile: Dockerfile.transform
+      container_name: transform
+      depends_on:
+        - postgres
+      environment:
+        DB_HOST: postgres
+        DB_PORT: 5432
+        DB_NAME: my_db
+        DB_USER: my_user
+        DB_PASSWORD: 12345
+      networks:
+        - app-network
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8.4
+    container_name: clickhouse
+    ports:
+      - "8123:8123"    
+    environment:
+      CLICKHOUSE_USER: click
+      CLICKHOUSE_PASSWORD: click
+      CLICKHOUSE_DB: mydatabase
+    networks:
+      - app-network
+
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: spark
+    depends_on:
+      - postgres
+      - clickhouse
+    command: ["/entrypoint.sh"]
+    volumes:
+      - ./spark_apps:/opt/spark/apps
+      - ./entrypoint.sh:/entrypoint.sh
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  postgres_data:
