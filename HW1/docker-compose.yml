@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: my_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/data    
+    networks:
+      - app-network
+
+  transform:
+      build:
+        context: .
+        dockerfile: Dockerfile.transform
+      container_name: transform
+      depends_on:
+        - postgres
+      environment:
+        DB_HOST: postgres
+        DB_PORT: 5432
+        DB_NAME: my_db
+        DB_USER: my_user
+        DB_PASSWORD: 12345
+      networks:
+        - app-network
+
+networks:
+  app-network:
+
+volumes:
+  postgres_data:
