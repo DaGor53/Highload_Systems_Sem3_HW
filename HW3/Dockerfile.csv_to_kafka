@@ -1,0 +1,11 @@
+FROM python:3.10
+
+WORKDIR /app
+
+COPY csv_to_kafka.py /app/
+COPY data /app/data
+
+
+RUN pip install --no-cache-dir kafka-python
+
+CMD ["python", "csv_to_kafka.py"]
